@@ -112,6 +112,7 @@ public class CollectibleItem : MonoBehaviour
         {
             Collect();
         }
+
     }
 
     private void Collect()
