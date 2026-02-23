@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
 public class SimpleGameManager : MonoBehaviour
@@ -8,8 +9,10 @@ public class SimpleGameManager : MonoBehaviour
     [Header("References")]
     public HoleController holeController;
     public Text scoreText;
-    public Material itemAboveHoleMaterial;
-    public Material itemBelowHoleMaterial;
+    [FormerlySerializedAs("itemAboveHoleMaterial")]
+    public Material idleItemMaterial;
+    [FormerlySerializedAs("itemBelowHoleMaterial")]
+    public Material fallingItemMaterial;
 
     [Header("Tuning Knobs")]
     public int spawnCount = 260;
@@ -79,8 +82,8 @@ public class SimpleGameManager : MonoBehaviour
 
             item.Initialize(
                 this,
-                itemAboveHoleMaterial,
-                itemBelowHoleMaterial,
+                idleItemMaterial,
+                fallingItemMaterial,
                 fallSpeed,
                 collectDepth,
                 approxRadius);

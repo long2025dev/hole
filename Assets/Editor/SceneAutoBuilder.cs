@@ -8,7 +8,12 @@ using UnityEngine.UI;
 
 public static class SceneAutoBuilder
 {
-    private const int HoleQueue = 2500;
+    private const int HoleBaseQueue = 3000;
+    private const int GroundQueue = 2000;
+    private const int HoleMaskQueue = HoleBaseQueue + 0;
+    private const int FallingQueue = HoleBaseQueue + 5;
+    private const int RimQueue = HoleBaseQueue + 10;
+    private const int IdleQueue = HoleBaseQueue + 20;
 
     [MenuItem("Tools/Hole Game/Create Test Scene")]
     public static void CreateTestScene()
@@ -38,11 +43,35 @@ public static class SceneAutoBuilder
         EnsureFolders("Assets/HoleGameGenerated");
         EnsureFolders("Assets/HoleGameGenerated/Materials");
 
-        Material holeMat = CreateOrLoadMaterial("Assets/HoleGameGenerated/Materials/HoleMaterial.mat", new Color(0.08f, 0.08f, 0.08f), HoleQueue);
-        Material itemAbove = CreateOrLoadMaterial("Assets/HoleGameGenerated/Materials/Item_AboveHole.mat", new Color(0.95f, 0.55f, 0.2f), HoleQueue + 10);
-        Material itemBelow = CreateOrLoadMaterial("Assets/HoleGameGenerated/Materials/Item_BelowHole.mat", new Color(0.95f, 0.55f, 0.2f), HoleQueue - 10);
-        Material groundMat = CreateOrLoadMaterial("Assets/HoleGameGenerated/Materials/GroundMaterial.mat", new Color(0.26f, 0.34f, 0.24f), 2000);
-        Material ringMat = CreateOrLoadMaterial("Assets/HoleGameGenerated/Materials/HoleRing.mat", new Color(0.0f, 0.0f, 0.0f), HoleQueue + 1);
+        Material groundMat = CreateOrLoadMaterial(
+            "Assets/HoleGameGenerated/Materials/GroundMaterial.mat",
+            FindBestOpaqueShader(),
+            new Color(0.26f, 0.34f, 0.24f),
+            GroundQueue);
+
+        Material holeCircleMat = CreateOrLoadMaterial(
+            "Assets/HoleGameGenerated/Materials/HoleMaskDisc.mat",
+            FindRequiredShader("HoleGame/HoleMask"),
+            new Color(0.05f, 0.05f, 0.05f, 0.85f),
+            HoleMaskQueue);
+
+        Material fallingItemMat = CreateOrLoadMaterial(
+            "Assets/HoleGameGenerated/Materials/FallingItemMat.mat",
+            FindRequiredShader("HoleGame/FallingStencil"),
+            new Color(0.95f, 0.55f, 0.2f, 1f),
+            FallingQueue);
+
+        Material holeOutlineMat = CreateOrLoadMaterial(
+            "Assets/HoleGameGenerated/Materials/HoleOutlineMat.mat",
+            FindBestOpaqueShader(),
+            new Color(0.0f, 0.0f, 0.0f, 1f),
+            RimQueue);
+
+        Material idleItemMat = CreateOrLoadMaterial(
+            "Assets/HoleGameGenerated/Materials/IdleItemMat.mat",
+            FindBestOpaqueShader(),
+            new Color(0.95f, 0.55f, 0.2f, 1f),
+            IdleQueue);
 
         GameObject lightGO = new GameObject("Directional Light");
         Light light = lightGO.AddComponent<Light>();
@@ -82,7 +111,7 @@ public static class SceneAutoBuilder
         Renderer holeRenderer = holeGO.GetComponent<Renderer>();
         if (holeRenderer != null)
         {
-            holeRenderer.sharedMaterial = holeMat;
+            holeRenderer.sharedMaterial = holeCircleMat;
         }
 
         GameObject ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -93,7 +122,7 @@ public static class SceneAutoBuilder
         Renderer ringRenderer = ring.GetComponent<Renderer>();
         if (ringRenderer != null)
         {
-            ringRenderer.sharedMaterial = ringMat;
+            ringRenderer.sharedMaterial = holeOutlineMat;
         }
 
         Object.DestroyImmediate(ring.GetComponent<Collider>());
@@ -101,8 +130,8 @@ public static class SceneAutoBuilder
         GameObject gmGO = new GameObject("GameManager");
         SimpleGameManager gameManager = gmGO.AddComponent<SimpleGameManager>();
         gameManager.holeController = holeController;
-        gameManager.itemAboveHoleMaterial = itemAbove;
-        gameManager.itemBelowHoleMaterial = itemBelow;
+        gameManager.idleItemMaterial = idleItemMat;
+        gameManager.fallingItemMaterial = fallingItemMat;
         gameManager.spawnCount = 260;
         gameManager.spawnAreaSize = new Vector2(36f, 36f);
         gameManager.fallSpeed = 5.5f;
@@ -121,7 +150,7 @@ public static class SceneAutoBuilder
 
         Debug.Log(
             "Hole test scene created. Render queues: " +
-            "HoleMaterial=2500, Item_AboveHole=2510, Item_BelowHole=2490.");
+            "Ground=2000, HoleMaskDisc=3000, FallingItemMat=3005, HoleOutlineMat=3010, IdleItemMat=3020.");
     }
 
     private static void ClearCurrentSceneObjects()
@@ -181,10 +210,9 @@ public static class SceneAutoBuilder
         AssetDatabase.CreateFolder(parent, leaf);
     }
 
-    private static Material CreateOrLoadMaterial(string assetPath, Color color, int renderQueue)
+    private static Material CreateOrLoadMaterial(string assetPath, Shader shader, Color color, int renderQueue)
     {
         Material mat = AssetDatabase.LoadAssetAtPath<Material>(assetPath);
-        Shader shader = FindBestShader();
 
         if (mat == null)
         {
@@ -206,7 +234,7 @@ public static class SceneAutoBuilder
         return mat;
     }
 
-    private static Shader FindBestShader()
+    private static Shader FindBestOpaqueShader()
     {
         string[] shaderNames =
         {
@@ -226,6 +254,17 @@ public static class SceneAutoBuilder
         }
 
         return Shader.Find("Standard");
+    }
+
+    private static Shader FindRequiredShader(string shaderName)
+    {
+        Shader shader = Shader.Find(shaderName);
+        if (shader == null)
+        {
+            throw new System.Exception("Required shader not found: " + shaderName);
+        }
+
+        return shader;
     }
 
     private static void SetMaterialColor(Material mat, Color color)

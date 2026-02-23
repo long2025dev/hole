@@ -29,6 +29,7 @@ public class HoleController : MonoBehaviour
         targetPosition = transform.position;
         targetPosition.y = surfaceY;
         transform.position = targetPosition;
+
     }
 
     private void LateUpdate()

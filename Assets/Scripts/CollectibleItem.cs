@@ -20,8 +20,8 @@ public class CollectibleItem : MonoBehaviour
     [SerializeField] private float scaleDownRate = 0.35f;
 
     private Renderer cachedRenderer;
-    private Material aboveHoleMaterial;
-    private Material belowHoleMaterial;
+    private Material idleItemMaterial;
+    private Material fallingItemMaterial;
     private SimpleGameManager gameManager;
     private Vector3 initialScale = Vector3.one;
 
@@ -38,15 +38,15 @@ public class CollectibleItem : MonoBehaviour
 
     public void Initialize(
         SimpleGameManager manager,
-        Material itemAboveMaterial,
-        Material itemBelowMaterial,
+        Material itemIdleMaterial,
+        Material itemFallingMaterial,
         float itemFallSpeed,
         float itemCollectDepth,
         float radiusApprox)
     {
         gameManager = manager;
-        aboveHoleMaterial = itemAboveMaterial;
-        belowHoleMaterial = itemBelowMaterial;
+        idleItemMaterial = itemIdleMaterial;
+        fallingItemMaterial = itemFallingMaterial;
         fallSpeed = itemFallSpeed;
         collectDepth = itemCollectDepth;
 
@@ -67,9 +67,9 @@ public class CollectibleItem : MonoBehaviour
             cachedRenderer = GetComponent<Renderer>();
         }
 
-        if (cachedRenderer != null && aboveHoleMaterial != null)
+        if (cachedRenderer != null && idleItemMaterial != null)
         {
-            cachedRenderer.sharedMaterial = aboveHoleMaterial;
+            cachedRenderer.sharedMaterial = idleItemMaterial;
         }
 
         gameObject.SetActive(true);
@@ -85,9 +85,9 @@ public class CollectibleItem : MonoBehaviour
 
         state = ItemState.Falling;
 
-        if (cachedRenderer != null && belowHoleMaterial != null)
+        if (cachedRenderer != null && fallingItemMaterial != null)
         {
-            cachedRenderer.sharedMaterial = belowHoleMaterial;
+            cachedRenderer.sharedMaterial = fallingItemMaterial;
         }
     }
 
